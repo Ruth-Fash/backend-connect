@@ -15,7 +15,7 @@ export interface SearchSuggestionsPayload {
 }
 
 export interface SearchResultItem {
-  catalog_id: string;
+  catalog_id: string | null;
   normalised_title: string;
   weight: number | null;
   weight_unit: string | null;
@@ -42,6 +42,9 @@ export interface ProductInfo {
   brand: string;
   promotion_details: string | null;
   link: string;
+  weight: string | null;
+  weight_unit: string | null;
+  quantity: number | null;
 }
 
 export interface ProductInfoPayload {
@@ -76,6 +79,7 @@ export interface BrandProductInfo {
   price_was: number | null;
   brand: string;
   promotion_details: string | null;
+  image: string | null;
 }
 
 export interface BrandProductsPayload {
@@ -96,8 +100,37 @@ export interface SupermarketProductsPayload {
   results: ProductInfo[];
 }
 
+export interface CategoryInfo {
+  category_id: string;
+  category: string;
+}
+
+export interface CategoryPayload {
+  sort_by: string;
+  results: CategoryInfo[];
+}
+
+export interface CategoryProductInfo {
+  normalised_title: string;
+  price_now: number;
+  price_was: number | null;
+  brand: string;
+  promotion_details: string | null;
+  image: string | null;
+}
+
+export interface CategoryProductsPayload {
+  category_id: string;
+  page: number;
+  size: number;
+  total: number;
+  sort_by: string;
+  results: CategoryProductInfo[];
+}
+
 export type SearchSort = 'relevance' | 'price_asc' | 'price_desc' | 'name_asc' | 'name_desc';
 export type SortOption = 'relevance' | 'price_asc' | 'price_desc' | 'name_asc' | 'name_desc';
+export type SupermarketSort = 'name_asc' | 'name_desc' | 'price_asc' | 'price_desc' | 'relevance';
 
 // API functions
 export async function getSearchSuggestions(query: string): Promise<SearchSuggestionsPayload> {
@@ -139,7 +172,7 @@ export async function getProductInfo(
 }
 
 export async function getSupermarkets(
-  sortBy: SortOption = 'name_asc'
+  sortBy: SupermarketSort = 'name_asc'
 ): Promise<SupermarketPayload> {
   const response = await fetch(
     `${API_BASE_URL}/supermarkets/results?sort_by=${sortBy}`
@@ -152,7 +185,7 @@ export async function getSupermarketProducts(
   supermarketId: string,
   page = 0,
   size = 20,
-  sortBy: SortOption = 'relevance'
+  sortBy: SupermarketSort = 'relevance'
 ): Promise<SupermarketProductsPayload> {
   const params = new URLSearchParams({
     page: page.toString(),
@@ -189,5 +222,31 @@ export async function getBrandProducts(
     `${API_BASE_URL}/brands/${encodeURIComponent(brandId)}/products?${params}`
   );
   if (!response.ok) throw new Error('Failed to fetch brand products');
+  return response.json();
+}
+
+export async function getCategories(
+  sortBy: SortOption = 'name_asc'
+): Promise<CategoryPayload> {
+  const response = await fetch(`${API_BASE_URL}/categories?sort_by=${sortBy}`);
+  if (!response.ok) throw new Error('Failed to fetch categories');
+  return response.json();
+}
+
+export async function getCategoryProducts(
+  categoryId: string,
+  page = 0,
+  size = 20,
+  sortBy?: SortOption
+): Promise<CategoryProductsPayload> {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    size: size.toString(),
+  });
+  if (sortBy) params.append('sort_by', sortBy);
+  const response = await fetch(
+    `${API_BASE_URL}/categories/${encodeURIComponent(categoryId)}/products?${params}`
+  );
+  if (!response.ok) throw new Error('Failed to fetch category products');
   return response.json();
 }

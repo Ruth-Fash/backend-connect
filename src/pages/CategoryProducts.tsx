@@ -7,16 +7,16 @@ import { Footer } from '@/components/layout/Footer';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { SortSelect } from '@/components/common/SortSelect';
-import { getBrandProducts, SortOption } from '@/lib/api';
+import { getCategoryProducts, SortOption } from '@/lib/api';
 
-export default function BrandProducts() {
+export default function CategoryProducts() {
   const { id } = useParams<{ id: string }>();
   const [page, setPage] = useState(0);
-  const [sortBy, setSortBy] = useState<SortOption>('relevance');
+  const [sortBy, setSortBy] = useState<SortOption>('name_asc');
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['brandProducts', id, page, sortBy],
-    queryFn: () => getBrandProducts(id!, page, 20, sortBy),
+    queryKey: ['categoryProducts', id, page, sortBy],
+    queryFn: () => getCategoryProducts(id!, page, 20, sortBy),
     enabled: !!id,
   });
 
@@ -34,9 +34,9 @@ export default function BrandProducts() {
       <Header />
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-6 py-8">
-        <Link to="/brands" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-6">
+        <Link to="/categories" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-6">
           <ArrowLeft className="w-4 h-4 mr-1" />
-          Terug naar merken
+          Terug naar categorieën
         </Link>
 
         <div className="flex items-center justify-between mb-6">
@@ -78,7 +78,8 @@ export default function BrandProducts() {
                       <h3 className="font-medium text-foreground line-clamp-2 mb-2">
                         {product.normalised_title}
                       </h3>
-                      <div className="flex items-baseline gap-2 mb-2">
+                      <p className="text-sm text-muted-foreground mb-1">{product.brand}</p>
+                      <div className="flex items-baseline gap-2">
                         <span className="font-semibold text-primary">
                           {formatPrice(product.price_now)}
                         </span>
@@ -89,7 +90,7 @@ export default function BrandProducts() {
                         )}
                       </div>
                       {product.promotion_details && (
-                        <p className="text-sm text-primary">{product.promotion_details}</p>
+                        <p className="text-sm text-primary mt-1">{product.promotion_details}</p>
                       )}
                     </div>
                   </div>
