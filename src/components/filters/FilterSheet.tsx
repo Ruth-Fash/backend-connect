@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Filter, X } from 'lucide-react';
+import { Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -11,31 +11,37 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { getSupermarkets, getBrands, SupermarketInfo, BrandInfo } from '@/lib/api';
+import { getSupermarkets, getBrands, getCategories, SupermarketInfo, BrandInfo, CategoryInfo } from '@/lib/api';
 
 interface FilterSheetProps {
   selectedSupermarkets: string[];
   selectedBrands: string[];
+  selectedCategories?: string[];
   onSupermarketsChange: (supermarkets: string[]) => void;
   onBrandsChange: (brands: string[]) => void;
+  onCategoriesChange?: (categories: string[]) => void;
   onReset: () => void;
 }
 
 export function FilterSheet({
   selectedSupermarkets,
   selectedBrands,
+  selectedCategories = [],
   onSupermarketsChange,
   onBrandsChange,
+  onCategoriesChange,
   onReset,
 }: FilterSheetProps) {
   const [open, setOpen] = useState(false);
   const [supermarkets, setSupermarkets] = useState<SupermarketInfo[]>([]);
   const [brands, setBrands] = useState<BrandInfo[]>([]);
+  const [categories, setCategories] = useState<CategoryInfo[]>([]);
 
   useEffect(() => {
-    Promise.all([getSupermarkets(), getBrands()]).then(([supermarketData, brandData]) => {
+    Promise.all([getSupermarkets(), getBrands(), getCategories()]).then(([supermarketData, brandData, categoryData]) => {
       setSupermarkets(supermarketData.results);
       setBrands(brandData.results);
+      setCategories(categoryData.results);
     });
   }, []);
 
@@ -55,7 +61,16 @@ export function FilterSheet({
     }
   };
 
-  const activeFiltersCount = selectedSupermarkets.length + selectedBrands.length;
+  const toggleCategory = (id: string) => {
+    if (!onCategoriesChange) return;
+    if (selectedCategories.includes(id)) {
+      onCategoriesChange(selectedCategories.filter((c) => c !== id));
+    } else {
+      onCategoriesChange([...selectedCategories, id]);
+    }
+  };
+
+  const activeFiltersCount = selectedSupermarkets.length + selectedBrands.length + selectedCategories.length;
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -111,6 +126,26 @@ export function FilterSheet({
                   />
                   <Label htmlFor={`brand-${brand.brand_id}`} className="cursor-pointer">
                     {brand.brand}
+                  </Label>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <Separator />
+
+          <div>
+            <h3 className="font-medium mb-3">Filter op Categorie</h3>
+            <div className="space-y-2 max-h-40 overflow-y-auto">
+              {categories.map((category) => (
+                <div key={category.category_id} className="flex items-center gap-2">
+                  <Checkbox
+                    id={`category-${category.category_id}`}
+                    checked={selectedCategories.includes(category.category_id)}
+                    onCheckedChange={() => toggleCategory(category.category_id)}
+                  />
+                  <Label htmlFor={`category-${category.category_id}`} className="cursor-pointer">
+                    {category.category}
                   </Label>
                 </div>
               ))}
